@@ -1,0 +1,366 @@
+<!-- http://net.tutsplus.com/tutorials/html-css-techniques/how-to-inject-custom-html-and-css-into-an-iframe/ -->
+<!doctype html>
+<html>
+    <head>
+        <title>WebSnippet - See your web snippets live</title>
+        <link rel=stylesheet href=codemirror-3.14/lib/codemirror.css>
+        <link rel="stylesheet" href="split-pane/split-pane.css" />
+
+        <style type="text/css">
+            * {
+                padding:0;
+                margin:0;
+            }
+            html,body {
+                font-family: sans-serif;
+                height: 100%;
+                min-height: 100%;
+            }
+            #content {
+                width:100%;
+                height:100%;
+            }
+            #header {
+                padding:4px 10px 4px 10px;
+                background: #4E4E4E;
+                border-bottom: 2px solid #3287A4;
+                color: #fff;
+                height:28px;
+            }
+            #header h3 {
+                display:inline;
+            }
+            #header span {
+                color: #ccc;
+                font-size: 12px;
+            }
+            ul {
+                list-style: none;
+            }
+            #header ul {
+                overflow: hidden;
+                float: right;
+
+                font-size: 12px;
+                margin-top: 5px;
+            }
+            #header ul li{
+                float: left;
+                color: #ccc;
+                margin: 0 5px 0 5px;
+            }
+            #header ul li a{
+                text-decoration: none;
+                color: #ccc;
+                margin: 0 5px 0 5px;
+            }
+            #header ul li:hover {
+                color: #fff;
+                cursor:pointer;
+            }
+            #header ul li a:hover {
+                color: #fff;
+            }
+            #mainContent {
+                /*overflow:hidden;
+                height:93%;
+                opacity: 0;*/
+                position: absolute;
+                top:38px;
+                bottom:3px;
+                left:0;
+                right:0;
+                background: #efecec;
+            }
+            #footer {
+                left:0px;
+                right:0px;
+                height:3px;
+                position: absolute;
+                bottom: 0px;
+                background:#4e4e4e;
+            }
+            .grid {
+                float: left;
+            }
+            .left {
+                width:40%;
+            }
+            .right {
+                width:60%;
+            }
+
+
+            span.titles {
+                position:absolute;
+                right:7px;
+                top:5px;
+                opacity: 0.4;
+                font-size: 12px;
+            }
+            input#run {
+                padding: 3px;
+                margin: 1px auto auto 10px;
+                /*float: right;*/
+                /* margin-bottom: 5px;*/
+                font-size: 0.7em;
+            }
+
+            #jsSelect {
+                /*margin-top:4px;*/
+                border: 1px solid #9a9a9a;
+                padding: 2px;
+                margin-left: 170px;
+                /*float: right;*/
+                font-size: 0.7em;
+            }
+
+            .CodeMirror {
+                width: 100%;
+                height: 100%;
+            }
+            .CodeMirror pre.CodeMirror-placeholder { color: #999; }
+
+            /* Split Pane */
+            .split-pane-divider {
+
+            }
+            .horizontal {
+                cursor: row-resize !important;
+                height:8px;
+                background: url(assets/handle-h.png) 50% 3px no-repeat;
+            }
+            .vertical {
+                cursor: col-resize !important;
+                width:8px;
+                background: url(assets/handle-v.png) 3px 50% no-repeat;
+            }
+            #left-component {
+                width: 35%;
+                min-width: 100px;
+                bottom: 8px;
+                height: auto !important;
+            }
+            #left-component div.innerContainer{
+                padding:10px 20px 10px 20px;
+                border-right: 1px solid #9a9a9a;
+            }
+            #vertical-divider {
+                left: 35%; /* Same as left component width */
+            }
+            #right-component {
+                left: 35%;  /* Same as left component width */
+                margin-left: 8px;  /* Same as divider width */
+                min-width: 300px;
+                bottom: 8px;
+                height: auto !important;
+                overflow: hidden !important;
+            }
+            #right-component div{
+                position: absolute;
+                right: 8px;
+                left: 0px;
+                bottom: 0px;
+                top: 8px;
+                border: 1px solid #C0C0C0;
+                box-shadow: inset 0 1px 2px #e4e4e4;
+                background:#fff;
+            }
+            #right-component div iframe{
+                border:none;
+                width:100%;
+                height:100%;
+            }
+
+            #top-component {
+                bottom: 65%;
+                margin-bottom: 8px;
+                top:8px !important;
+                left:8px;
+                right:0px;
+                border: 1px solid #C0C0C0;
+                box-shadow: inset 0 1px 2px #e4e4e4;
+                /*box-shadow: inset 2px 2px 2px 2px black;*/
+                width:auto !important;
+            }
+
+            #horizontal-divider {
+                bottom: 65%;
+            }
+
+            #bottom-component {
+                height: 65%;
+            }
+
+            #inner-top-component {
+                bottom: 50%;
+                margin-bottom: 10px;
+                /*top:2px !important;*/
+                left:8px;
+                right:0px;
+                border: 1px solid #C0C0C0;
+                box-shadow: inset 0 1px 2px #e4e4e4;
+                width:auto !important;
+            }
+
+            #inner-horizontal-divider {
+                bottom: 50%;
+                height: 10px !important;
+            }
+
+            #inner-bottom-component {
+                height: 50%;
+                left:8px;
+                right:0px;
+                /*bottom:8px !important;*/
+                border: 1px solid #C0C0C0;
+                box-shadow: inset 0 1px 2px #e4e4e4;
+                width:auto !important;
+            }
+
+            /*.CodeMirror-gutters {
+                height: 100% !important;
+                border-right: none !important;
+                padding-bottom: none !important;
+            } */
+            .htmlWarning {
+                list-style:none;
+                position: absolute;
+                bottom: 0;
+                background: #DBF3F5;
+                z-index: 100;
+                height:15px;
+                padding: 5px 0 5px 0;
+                width:100%;
+                border-top:1px solid #A4D5DA;
+                font-size: .75em;
+                /*line-height: 1.5em;*/
+            }
+            .htmlWarning li {
+                text-align: center;
+
+            }
+            .htmlWarning li code {
+                font-size: 1.2em;
+                font-weight: bold;
+            }
+            #messageBox {
+                position:absolute;
+                width:400px;
+                max-height:250px;
+                overflow: auto;
+                right: 20px;
+                bottom: 20px;
+                background: #DBF3F5;
+                z-index: 1000;
+                padding: 7px;
+                border:1px solid #A4D5DA;
+                font-size: .75em;
+                border-radius: 3px;
+                box-shadow: 3px 3px 3px #ccc;
+                line-height: 1.5em;
+                display: none;
+            }
+            .aboutTitle {
+                font-size: 1.1em;
+                font-weight:bold;
+                margin-bottom: 7px;
+            }
+        .helpTitle {
+            margin-left: 20px;
+        }
+
+        #messageBox .errorTitle {
+            text-decoration:underline;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        </style>
+    </head>
+    <body>
+        <div id="content">
+            <div id="header">
+                <h3 title="Test your web snippets and see live">WebSnippet</h3>
+                <span>1.0</span>
+
+                <ul>
+                    <li> | </li>
+                    <li id="credits">Credits</li>
+                    <li id="help">Help</li>
+                    <li id="about">About</li>
+                    <li><a href="http://jbkflex.wordpress.com/contact/" target="_blank">Feedback</a></li>
+                </ul>
+                <select id="jsSelect">
+                    <option>Add JavaScript Library</option>
+                    <option>None</option>
+                    <option>jQuery</option>
+                    <option>AngularJS</option>
+                    <option>backbone.js</option>
+                    <option>prototype js</option>
+                    <option>Dojo</option>
+                    <option>Custom Path</option>
+                </select>
+                <input type="button" value="Run your JavaScript" id="run" title="Click to Run your JavaScript Code">
+                <input type="checkbox"/><label>Autorun JavaScript</label>
+            </div>
+
+            <div id="mainContent">
+                <div class="split-pane fixed-left">
+                    <div class="split-pane-component" id="left-component">
+                        <!--<div class="innerContainer">-->
+                            <div class="split-pane fixed-bottom">
+                                <div class="split-pane-component" id="top-component">
+                                    <!--<div class="decoration" id="topDecoration">-->
+                                            <textarea  id="html" placeholder="HTML"></textarea>
+                                    <!--</div>-->
+
+                                </div>
+                                <div class="split-pane-divider horizontal" id="horizontal-divider"></div>
+                                <div class="split-pane-component" id="bottom-component">
+                                    <!--<div class="decoration"><!-- This div is added for styling purposes only. It's not part of the split-pane plugin. -->
+                                    <!--</div>-->
+                                    <div class="split-pane fixed-bottom">
+                                        <div class="split-pane-component" id="inner-top-component">
+                                            <!--<div class="decoration" id="innerTopDecoration">-->
+                                                <textarea  id="css" placeholder="CSS"></textarea>
+                                            <!--</div>-->
+                                        </div>
+                                        <div class="split-pane-divider horizontal" id="inner-horizontal-divider"></div>
+                                        <div class="split-pane-component" id="inner-bottom-component">
+                                            <!--<div class="decoration" id="innerBottomDecoration">-->
+                                                <textarea  id="js" placeholder="JavaScript"></textarea>
+                                            <!--</div>-->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="split-pane-divider vertical" id="vertical-divider"></div>
+                    <div class="split-pane-component" id="right-component">
+                        <div>
+                            <span class="titles">Result</span>
+                            <iframe id="myFrame">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="footer">
+
+            </div>
+            <div id="messageBox">
+            </div>
+        </div>
+        <script src="jquery-1.8.3.min.js"></script>
+        <script src="split-pane/split-pane.js"></script>
+        <script src="codemirror-3.14/lib/codemirror.js"></script>
+        <script src="codemirror-3.14/addon/display/placeholder.js"></script>
+        <script src="codemirror-3.14/addon/edit/closetag.js"></script>
+        <script src=codemirror-3.14/mode/xml/xml.js></script>
+        <script src=codemirror-3.14/mode/javascript/javascript.js></script>
+        <script src=codemirror-3.14/mode/css/css.js></script>
+        <script src=codemirror-3.14/mode/htmlmixed/htmlmixed.js></script>
+        <script type="text/javascript" src="jshint-2.1.4.js"></script>
+        <script type="text/javascript" src="app.js"></script>
+    </body>
+</html>
